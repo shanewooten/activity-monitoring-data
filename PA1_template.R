@@ -1,64 +1,84 @@
+---
+title: "Reproducible Research: Peer Assessment 1"
+output: 
+  html_document:
+  keep_md: true
+---
 
-##title: "Reproducible Research: Peer Assessment 1"
-##output: 
-  ##html_document:
-    ##keep_md: true
+## Introduction
 
-### Loading and preprocessing the data
-### Make sure to load the proper libraries 
-### Make sure that you are in the right directory
+It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the "quantified self" movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
 
-library(ggplot2)
+This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
 
-###Warning: package 'ggplot2' was built under R version 3.1.3
+The data for this assignment can be downloaded from the course web site:
 
-library(plyr)
+* Dataset: [Activity monitoring data]
 
-###Warning: package 'plyr' was built under R version 3.1.3
+The variables included in this dataset are:
 
-activity <- read.csv("activity.csv", header = TRUE)
+steps: Number of steps taking in a 5-minute interval (missing values are coded as ????????) </br>
+date: The date on which the measurement was taken in YYYY-MM-DD format </br>
+interval: Identifier for the 5-minute interval in which measurement was taken </br>
+The dataset is stored in a comma-separated-value (CSV) file and there are a total of 17,568 observations in this dataset. 
 
-##Processing the Data
+## Loading and preprocessing the data 
 
-StepsPerDay <- tapply(activity$steps, activity$date, sum)
+Unzip data to obtain a csv file.Loading and preprocessing the data
+Make sure to load the proper libraries 
+Make sure that you are in the right directory
+
+```{r}library(ggplot2)
+        library(plyr)
+        activity <- read.csv("activity.csv", header = TRUE)
+```
+
+## Processing the Data
+
+```{r}StepsPerDay <- tapply(activity$steps, activity$date, sum)
 StepsPerDay
+```
 
-##Make a histogram of the total number of steps taken each day
+ Make a histogram of the total number of steps taken each day
 
-hist(StepsPerDay, xlab = "Number of Steps", main = "Histogram: Steps per Day")
+```{r}hist(StepsPerDay, xlab = "Number of Steps", main = "Histogram: Steps per Day")
+```
+Calculate and report the mean and median of the total number of steps taken per day
 
-##Calculate and report the mean and median of the total number of steps taken per day
-
-MeanPerDay <- mean(StepsPerDay, na.rm = TRUE)
+```{r}MeanPerDay <- mean(StepsPerDay, na.rm = TRUE)
 MedianPerDay <- median(StepsPerDay, na.rm = TRUE)
+```
 
-### What is the mean steps per day = 10766.19 and median steps per day = 10765.
+## What is the mean and median steps per day = 10766.19 and median steps per day = 10765.
 
-# (Q2) What is the average daily acitivity pattern?
+What is the average daily acitivity pattern?
 
-StepsPerInterval <- tapply(activity$steps, activity$interval, mean, na.rm = TRUE)
+```{r}StepsPerInterval <- tapply(activity$steps, activity$interval, mean, na.rm = TRUE)
 plot(as.numeric(names(StepsPerInterval)),
      StepsPerInterval,
      xlab = "Interval",
      ylab = "Steps",
      main = "Average Daily Activity Pattern", 
      type = "l")
+```
 
-#Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+## Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
-maxInterval <- names(sort(StepsPerInterval, decreasing = TRUE) [1])
+```{r}maxInterval <- names(sort(StepsPerInterval, decreasing = TRUE) [1])
 maxSteps <- sort(StepsPerInterval, decreasing = TRUE)[1]
+```
 
-###The interval with maximum activity is 83, at 206.169 steps ## Q3) Impute missing values
+## The interval with maximum activity is 83, at 206.169 steps ## Q3) Impute missing values
 
-NA.vals <- sum(is.na(activity$steps))
+```{r}NA.vals <- sum(is.na(activity$steps))
 NA.vals
+```
 
-### [1] 2304
+[1] 2304
 
-##Devise a stratergy for filling in all of the missing values in the dataset
+## Devise a stratergy for filling in all of the missing values in the dataset
 
-StepPerInterval <- tapply(activity$steps, activity$interval, mean, na.rm = TRUE)
+```{r}StepPerInterval <- tapply(activity$steps, activity$interval, mean, na.rm = TRUE)
 # split activity data by interval
 activity.split <- split(activity, activity$interval)
 # fill in missing data for each interval
@@ -68,62 +88,68 @@ for (i in 1:length(activity.split)){
 
 activity.imputed <- do.call("rbind", activity.split)
 activity.imputed <- activity.imputed[order(activity.imputed$date) ,]
+```
 
-##Make a histogram of the total number of steps taken 
-##and calcualte and report the mean and median total number of steps taken per day       
+## Make a histogram of the total number of steps taken and calcualte and report the mean and median total number of steps taken per day       
 
-StepsPerDay.imputed <- tapply(activity.imputed$steps, activity.imputed$date, sum)
+```{r}StepsPerDay.imputed <- tapply(activity.imputed$steps, activity.imputed$date, sum)
 hist(StepsPerDay.imputed, xlab = "Number of Steps", main = "Histogram: Steps per Day (Imputed data)")
 
 MeanPerDay.imputed <- mean(StepsPerDay.imputed, na.rm = TRUE)
 MedianPerDay.imputed <- median(StepsPerDay.imputed, na.rm = TRUE)
+```
+## MeanPerDay.imputed
+[1] 10766.19
 
-MeanPerDay.imputed
-### [1] 10766.19
+## MedianPerDay.imputed
+[1] 10766.19
 
-MedianPerDay.imputed
-### [1] 10766.19
+Are there differences in acitivity patterns between weekdays and weekends?
 
-## (Q4) Are there differences in acitivity patterns between weekdays and weekends?
+Create a new factor variable in the dataset with two levels - “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
 
-###Create a new factor variable in the dataset with two levels - “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
-
-activity.imputed$day <- ifelse(weekdays(as.Date(activity.imputed$date)) == "Saturday" | 
+```{r}activity.imputed$day <- ifelse(weekdays(as.Date(activity.imputed$date)) == "Saturday" | 
                                        weekdays(as.Date(activity.imputed$date)) == "Sunday", "weekend", "weekday")
+```
 
-##Make a panel plot containing a time series plot of the 5-minute interval and the average number of steps taken, averaged across all 
-##weekday days or weekend days.
+## Make a panel plot containing a time series plot of the 5-minute interval and the average number of steps taken, averaged across all weekday days or weekend days.
 
-## Calculate average steps per interval for weekends
-StepsPerInterval.weekend <- tapply(activity.imputed[activity.imputed$day == "weekend" ,]$steps, 
+Calculate average steps per interval for weekends
+```{r}StepsPerInterval.weekend <- tapply(activity.imputed[activity.imputed$day == "weekend" ,]$steps, 
                                    activity.imputed[activity.imputed$day == "weekend" ,]$interval, mean, na.rm = TRUE)
+```
 
-## Calculate average steps per interval for weekdays
-StepsPerInterval.weekday <- tapply(activity.imputed[activity.imputed$day == "weekday" ,]$steps, 
+Calculate average steps per interval for weekdays
+
+```{r}StepsPerInterval.weekday <- tapply(activity.imputed[activity.imputed$day == "weekday" ,]$steps, 
                                    activity.imputed[activity.imputed$day == "weekday" ,]$interval, mean, na.rm = TRUE)
+```
 
-### Set a 2 panel plot
-par(mfrow=c(1,2))
+## Set a 2 panel plot
 
-###Plot weekday activity
-plot(as.numeric(names(StepsPerInterval.weekday)),
+```{r}par(mfrow=c(1,2))
+```
+
+## Plot weekday activity
+
+```{r}plot(as.numeric(names(StepsPerInterval.weekday)),
      StepsPerInterval.weekday,
      xlab = "Interval",
      ylab = "Steps",
      main = "Activity Pattern (Weekdays)",
      type = "l")
+```
 
-
-###Plot weekday activity
-plot(as.numeric(names(StepsPerInterval.weekend)),
+## Plot weekday activity
+```{r}plot(as.numeric(names(StepsPerInterval.weekend)),
      StepsPerInterval.weekend,
      xlab = "Interval",
      ylab = "Steps",
      main = "Activity Pattern (Weekends)",
      type = "l")
-
-## Are there differences in activity patterns between weekdays and weekends?
-### Yes, there are differences in the activity patterns as more steps are being taken during the weekends. 
+```
+Are there differences in activity patterns between weekdays and weekends?
+Yes, there are differences in the activity patterns as more steps are being taken during the weekends. 
 
 
 
